@@ -1,0 +1,71 @@
+1 - $ sudo yum install httpd
+2 - $ sudo cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd-instance1.conf
+3 - Make the following changes:
+    sudo vi /etc/httpd/conf/httpd-instance1.conf
+        Listen 8080
+        ServerRoot "/etc/httpd-instance1"
+        PidFile /var/run/httpd-instance1.pid
+        ErrorLog /var/log/httpd-instance1_error.log
+        CustomLog /var/log/httpd-instance1_access.log combined
+
+        DocumentRoot "/var/www/html-instance1"
+        <Directory "/var/www/html-instance1">
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+        </Directory>
+
+        sudo mkdir /var/www/html-instance1
+        sudo mkdir /var/log/httpd-instance1
+        sudo mkdir /var/run/httpd-instance1
+
+        sudo chown -R apache:apache /var/www/html-instance1 /var/log/httpd-instance1 /var/run/httpd-instance1
+
+4 - [Unit]
+    Description=Apache HTTP Server (Instance 1)
+    After=network.target remote-fs.target nss-lookup.target
+
+    [Service]
+    ExecStart=/usr/sbin/httpd -f /etc/httpd/conf/httpd-instance1.conf
+    ExecReload=/usr/sbin/httpd -k graceful -f /etc/httpd/conf/httpd-instance1.conf
+    ExecStop=/usr/sbin/httpd -k stop -f /etc/httpd/conf/httpd-instance1.conf
+    PIDFile=/var/run/httpd-instance1.pid
+    Type=forking
+    #Type=notify
+    #EnvironmentFile=/etc/sysconfig/httpd
+    User=apache
+    Group=apache
+
+    [Install]
+    WantedBy=multi-user.target
+    -----------------------------
+    $ sudo systemctl daemon-reload
+    $ sudo netstat -tuln | grep httpd,,,sudo netstat -tuln | grep 8081;;;sudo lsof -i :8081
+
+5 - $ sudo firewall-cmd --reload
+        sudo firewall-cmd --zone=public --add-port=8080/tcp --permanent
+        sudo firewall-cmd --get-active-zones
+        sudo firewall-cmd --zone=public --list-ports
+        sudo firewall-cmd --reload
+
+        sestatus
+        sudo setenforce 0
+        sudo semanage port -a -t http_port_t -p tcp 8081
+        sudo setenforce 1
+
+6-  to start httpd service manually
+    $ httpd -f /etc/httpd2/conf/httpd.conf
+
+    YOUTUBE:
+    https://www.youtube.com/watch?v=ARa3_RkCsaE
+
+
+
+
+
+
+
+
+
+
+
