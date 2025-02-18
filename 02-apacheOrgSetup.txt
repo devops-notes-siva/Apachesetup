@@ -1,0 +1,45 @@
+cp -r /etc/httpd/ /etc/httpd1
+
+Make the following changes:
+    sudo vi /etc/httpd2/conf/httpd.conf
+        Listen 8080
+        ServerRoot "/etc/httpd2"
+        PidFile /var/run/httpd2/httpd2.pid
+        ErrorLog "/opt/cloudhost/logs/apache/httpd2_error_log"
+        CustomLog "/opt/cloudhost/logs/apache/httdp2_access_log" format_C91
+	
+    sudo vi /etc/httpd2/conf.d/ssl.conf
+	Listen 445 https
+	ErrorLog "/opt/cloudhost/logs/apache/httpd2_ssl_error_log"
+	TransferLog "/opt/cloudhost/logs/apache/httpd2_ssl_access_log"
+	SSLCertificateFile /etc/httpd2/conf.d/server.crt
+	SSLCertificateKeyFile /etc/httpd2/conf.d/server.key
+	SSLCertificateChainFile /etc/httpd2/conf.d/ca_bundle.crt
+	SSLCACertificateFile /etc/httpd2/conf.d/ca_bundle.crt
+	CustomLog /opt/cloudhost/logs/apache/httpd2_ssl_request_log
+
+
+        sudo mkdir /var/run/httpd2
+
+        sudo chown -R apache:apache /etc/httpd2
+
+Service File:
+------------
+/usr/lib/systemd/system/httpd2.service
+    [Unit]
+    Description=Apache HTTP Server (Instance 2)
+    After=network.target remote-fs.target nss-lookup.target
+
+    [Service]
+    ExecStart=/usr/sbin/httpd -f /etc/httpd2/conf/httpd.conf
+    ExecReload=/usr/sbin/httpd -k graceful -f /etc/httpd2/conf/httpd.conf
+    ExecStop=/usr/sbin/httpd -k stop -f /etc/httpd2/conf/httpd.conf
+    #PIDFile=/var/run/httpd-instance1.pid
+    Type=forking
+    #Type=notify
+    #EnvironmentFile=/etc/sysconfig/httpd
+    #User=apache
+    #Group=apache
+
+    [Install]
+    WantedBy=multi-user.target
