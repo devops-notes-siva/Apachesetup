@@ -1,0 +1,80 @@
+1) Checking for "rewrite_module" is enabled or not:
+==============================================
+Execute the following command to list all loaded modules:
+    sudo httpd -M | grep rewrite
+if mod_rewrite is enabled, you should see an output like this:
+    rewrite_module (shared)
+
+The main Apache configuration file is usually located at /etc/httpd/conf/httpd.conf. You might also have 
+    LoadModule rewrite_module modules/mod_rewrite.so
+
+2) Applying condotion:
+    Method 1: Using mod_rewrite (Recommended)
+    vi /etc/httpd/conf/httpd.conf
+
+        <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} ^/_vti_inf\.html$ [NC]
+        RewriteRule .* - [F,L]
+        </IfModule>
+
+    Method 2: Using mod_alias (Simpler)
+    vi /etc/httpd/conf/httpd.conf
+        RedirectMatch 403 /_vti_inf\.html
+    
+    Method 3: Using FilesMatch (Strictly Blocking the File)
+    vi /etc/httpd/conf/httpd.conf
+
+        <FilesMatch "^_vti_inf\.html$">
+        Require all denied
+        </FilesMatch>
+
+3) sudo systemctl restart httpd
+4)Verification
+    curl -I https://your-domain.com/_vti_inf.html
+
+    to bypass procy temp:
+         curl -I https://harder-dev1.it.hpe.com/_vti_inf.html --noproxy '*'
+5) Check if the request is reaching Apache
+    sudo netstat -tulnp | grep ':80\|:443'
+
+-----------------------
+
+Even afetr applying if you are still getting response, there are a few potential reasons for this:
+
+Proxy Interference (Zscaler)
+
+    1) Your connection is going through a Zscaler proxy, which may be caching the response or bypassing your local Apache server.
+    To check if the request is actually reaching your server, try accessing the file directly from the RHEL machine:
+        curl -I http://localhost/_vti_inf.html
+
+            Clear Zscaler Cache Manually (Admin Required)
+            Disable Zscaler Caching for This File -->to the Cache Exclusions list.
+            Apache Headers to Prevent Caching
+                    <FilesMatch "^_vti_inf\.html$">
+                    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+                     Header set Pragma "no-cache"
+                    Header set Expires 0
+                    </FilesMatch>
+
+    2) Virtual Host Configuration
+        httpd -S
+
+        Single-Host Configuration (Default Mode)
+        Virtual Host Configuration (For Multiple Websites on One Server)
+
+
+
+
+Checking openssl connection:
+================================
+ openssl s_client -connect harder-dev1.it.hpe.com:443 | grep -i 'cipher's
+
+ Test Individual Ciphers
+    openssl s_client -connect yourdomain.com:443 -cipher ECDHE-RSA-AES128-GCM-SHA256
+ 
+ to check postconf 
+    The smtpd_client_new_tls_session_rate_limit setting in Postfix controls the number of new TLS sessions a client is allowed to initiate within a specified time frame. It is a rate-limiting feature to prevent abuse and ensure that a single client doesn't overwhelm the mail server with too many TLS handshakes in a short period.
+        $ postconf smtpd_client_new_tls_session_rate_limit
+    to set no number:
+        postconf -e 'smtpd_client_new_tls_session_rate_limit = 10'

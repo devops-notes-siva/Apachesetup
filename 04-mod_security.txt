@@ -1,0 +1,33 @@
+How to Block a URL Using a Custom Rule in mod_security on a RHEL Apache HTTPD Server
+    $ sudo yum install mod_security -y
+Check if mod_security is loaded by running:
+    httpd -M | grep security
+        security2_module (shared)
+
+Step 2: Configure mod_security to Block the Specific URL
+    2.1 Create or Edit a Custom Rule in mod_security
+
+    Locate mod_security Configuration Directory:
+
+        On RHEL, mod_security configuration is usually located in /etc/httpd/conf.d/ or /etc/httpd/conf/. The default file to add rules is mod_security.conf.
+
+        Open mod_security Configuration File:
+
+        If it doesn't exist, you can create a custom file in /etc/httpd/conf.d/ (e.g., mod_security_custom_rules.conf)
+
+        You will write a custom rule to block the URL https://harder-dev1.it.hpe.com/_vti_inf.html
+        sudo vi /etc/httpd/conf.d/mod_security_custom_rules.conf
+            SecRule REQUEST_URI "@streq /_vti_inf.html" \
+             "id:10001,phase:1,deny,status:403,msg:'Blocking _vti_inf.html URL'"
+        
+    Explanation of the Rule:
+
+    SecRule REQUEST_URI "@streq /_vti_inf.html": This checks if the requested URI is exactly / _vti_inf.html. The @streq operator means "string equal."
+    id:10001: Each SecRule needs a unique rule ID. This ID is used for logging and referencing.
+    phase:1: This specifies that the rule should be applied during the request phase, meaning before the server processes the request or sends any response.
+    deny: This action will deny the request if the rule matches.
+    status:403: If the request is denied, the server will respond with an HTTP 403 Forbidden status.
+    msg:'Blocking _vti_inf.html URL': This is a custom message for logging purposes.
+
+        Save and Exit: After adding the rule, save and exit the file.
+
