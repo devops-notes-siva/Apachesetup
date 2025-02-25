@@ -10,7 +10,13 @@ The main Apache configuration file is usually located at /etc/httpd/conf/httpd.c
 
 2) Applying condotion:
     Method 1: Using mod_rewrite (Recommended)
-    vi /etc/httpd/conf/httpd.conf
+    vi /etc/httpd/conf/httpd.conf (or) ssl.conf
+
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} ^/robots\.txt$
+        RewriteRule ^.*$ / [R=302,L]
+
+        ---------------------
 
         <IfModule mod_rewrite.c>
         RewriteEngine On
