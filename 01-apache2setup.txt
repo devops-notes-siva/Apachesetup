@@ -48,6 +48,9 @@
         sudo firewall-cmd --zone=public --list-ports
         sudo firewall-cmd --reload
 
+        Set the default zone to "trusted" (which allows all traffic):
+            firewall-cmd --set-default-zone=trusted
+
         sestatus
         sudo setenforce 0
         sudo semanage port -a -t http_port_t -p tcp 8081
