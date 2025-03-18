@@ -31,3 +31,16 @@ Step 2: Configure mod_security to Block the Specific URL
 
         Save and Exit: After adding the rule, save and exit the file.
 
+
+===================================
+=========================================
+X-Forwarded-For log format is configured to capture client IP's for which apache is getting forwarded
+
+Below is the configuration done
+
+Apache Logs File Path : /etc/httpd/conf.d/ssl.conf
+
+LogFormat " %t %s %r %I %B %D %k %X \"%{X-Forwarded-For}i\" \"%{Referer}i\" \"%{User-agent}i\" "
+
+
+
